@@ -1,0 +1,22 @@
+image: phlummox/android-studio:latest  # 預載 Android Studio 的 Docker 映像（2025 版支援 Jetpack Compose）
+ports:
+  - port: 6080
+    protocol: http  # 用來開啟 Android Studio 的 noVNC 介面
+    onOpen: ignore  # 自動開啟預覽
+tasks:
+  - init: |
+      # 安裝額外依賴（如果需要）
+      sudo apt-get update && sudo apt-get install -y openjdk-17-jdk wget unzip
+      # 下載最新 SDK（如果映像沒的）
+      wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+      unzip cmdline-tools.zip && rm cmdline-tools.zip
+      mkdir -p ~/Android/Sdk/cmdline-tools/latest && mv cmdline-tools/* ~/Android/Sdk/cmdline-tools/latest/
+      export ANDROID_HOME=~/Android/Sdk && yes | ~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+  - command: |
+      # 啟動 Android Studio（背景執行）
+      /opt/android-studio/bin/studio.sh --no-splash &
+      # 同時開啟 noVNC 介面（如果需要）
+      nohup websockify --web=/opt/novnc 6080 localhost:5900 &
+vscode:
+  extensions:
+    - vscjava.vscode-java-pack  # VS Code 輔助（Ona 預設用 VS Code）
